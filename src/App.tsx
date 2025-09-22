@@ -1,10 +1,10 @@
 import React from 'react'
+import { RouterProvider } from 'react-router-dom'
+import { MainRoute } from './Route/route'
 
 const App = () => {
   return (
-    <div className='px-4 py-4 bg-amber-400'>
-    
-    </div>
+<RouterProvider router={MainRoute}/>
   )
 }
 
