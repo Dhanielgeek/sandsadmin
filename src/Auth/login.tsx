@@ -1,8 +1,10 @@
-
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Eye, EyeOff, Lock, Mail, Shield } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import axios from "../config/axiosconfig";
+import { isAxiosError } from "axios";
+import { toast } from "react-hot-toast";
 
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -10,6 +12,7 @@ const Login = () => {
     email: "",
     password: "",
   });
+  const [loading, setLoading] = useState(false);
 
   const handleInputChange = (e: any) => {
     setFormData({
@@ -18,9 +21,38 @@ const Login = () => {
     });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Login form submitted:", formData);
+
+    if (!formData.email || !formData.password) {
+      return toast.error("Email and password required");
+    }
+
+    setLoading(true);
+    const loadingId = toast.loading("Signing in...");
+
+    try {
+      const res = await axios.post("/login", formData);
+      toast.success("Login successful!");
+      console.log("✅ Logged in:", res.data);
+    } catch (error) {
+      if (isAxiosError(error)) {
+        const apiMessage = error.response?.data?.message;
+        const apiError = error.response?.data?.error;
+        const fallback = error.message || "An unexpected error occurred";
+
+        const errorMsg =
+          `${apiMessage || ""}${apiError ? " - " + apiError : ""}`.trim() ||
+          fallback;
+
+        toast.error(errorMsg);
+      } else {
+        toast.error("Error occurred");
+      }
+    } finally {
+      setLoading(false);
+      toast.dismiss(loadingId);
+    }
   };
 
   const router = useNavigate();
@@ -28,7 +60,6 @@ const Login = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center p-6">
       <div className="w-full max-w-md">
-        {/* Background Card */}
         <div className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-2xl border border-white/20 p-8">
           {/* Header */}
           <div className="text-center mb-8">
@@ -44,13 +75,10 @@ const Login = () => {
           </div>
 
           {/* Form */}
-          <div className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-6">
             {/* Email */}
             <div>
-              <label
-                htmlFor="loginEmail"
-                className="block text-sm font-semibold text-gray-700 mb-2"
-              >
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
                 Email Address
               </label>
               <div className="relative">
@@ -59,12 +87,11 @@ const Login = () => {
                 </div>
                 <input
                   type="email"
-                  id="loginEmail"
                   name="email"
                   value={formData.email}
                   onChange={handleInputChange}
                   placeholder="Enter your email address"
-                  className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 bg-white/50 backdrop-blur-sm"
+                  className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 bg-white/50"
                   required
                 />
               </div>
@@ -72,10 +99,7 @@ const Login = () => {
 
             {/* Password */}
             <div>
-              <label
-                htmlFor="loginPassword"
-                className="block text-sm font-semibold text-gray-700 mb-2"
-              >
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
                 Password
               </label>
               <div className="relative">
@@ -84,12 +108,11 @@ const Login = () => {
                 </div>
                 <input
                   type={showPassword ? "text" : "password"}
-                  id="loginPassword"
                   name="password"
                   value={formData.password}
                   onChange={handleInputChange}
                   placeholder="Enter your password"
-                  className="w-full pl-12 pr-12 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 bg-white/50 backdrop-blur-sm"
+                  className="w-full pl-12 pr-12 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 bg-white/50"
                   required
                 />
                 <button
@@ -106,45 +129,22 @@ const Login = () => {
               </div>
             </div>
 
-            {/* Remember me & Forgot password */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <input
-                  id="remember-me"
-                  type="checkbox"
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                />
-                <label
-                  htmlFor="remember-me"
-                  className="ml-2 block text-sm text-gray-700"
-                >
-                  Remember me
-                </label>
-              </div>
-              <a
-                href="#"
-                className="text-sm text-blue-600 hover:text-blue-500 font-medium"
-              >
-                Forgot password?
-              </a>
-            </div>
-
-            {/* Submit Button */}
+            {/* Submit */}
             <button
               type="submit"
-              onClick={handleSubmit}
-              className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 px-6 rounded-xl font-semibold hover:from-blue-700 hover:to-indigo-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transform hover:scale-[1.02] transition duration-200 shadow-lg"
+              disabled={loading}
+              className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 rounded-xl font-semibold hover:from-blue-700 hover:to-indigo-700 transition duration-200 disabled:opacity-50"
             >
-              Sign In to Dashboard
+              {loading ? "Signing In..." : "Sign In to Dashboard"}
             </button>
-          </div>
+          </form>
 
           {/* Footer */}
           <p className="text-center text-sm text-gray-600 mt-6">
             Need an admin account?{" "}
             <span
               onClick={() => router("/signup")}
-              className="font-semibold text-blue-600 hover:text-blue-500 transition duration-200"
+              className="font-semibold text-blue-600 hover:text-blue-500 cursor-pointer"
             >
               Sign Up Here
             </span>
@@ -153,7 +153,7 @@ const Login = () => {
           {/* Security Notice */}
           <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-xl">
             <div className="flex items-start">
-              <Shield className="h-5 w-5 text-blue-600 mr-2 mt-0.5 flex-shrink-0" />
+              <Shield className="h-5 w-5 text-blue-600 mr-2 mt-0.5" />
               <div className="text-sm text-blue-800">
                 <p className="font-medium mb-1">Secure Admin Access</p>
                 <p className="text-blue-700">
@@ -170,4 +170,3 @@ const Login = () => {
 };
 
 export default Login;
-
