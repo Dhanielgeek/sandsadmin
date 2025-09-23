@@ -14,6 +14,8 @@ const Login = () => {
   });
   const [loading, setLoading] = useState(false);
 
+  const nav = useNavigate();
+
   const handleInputChange = (e: any) => {
     setFormData({
       ...formData,
@@ -34,6 +36,7 @@ const Login = () => {
     try {
       const res = await axios.post("/login", formData);
       toast.success("Login successful!");
+      nav("/admin/overview");
       console.log("✅ Logged in:", res.data);
     } catch (error) {
       if (isAxiosError(error)) {
