@@ -13,6 +13,8 @@ const Register = () => {
     email: "",
     password: "",
   });
+
+  const nav = useNavigate();
   const [loading, setLoading] = useState(false);
 
   const handleInputChange = (e: any) => {
@@ -39,6 +41,7 @@ const Register = () => {
     try {
       const res = await axios.post("/signup", formData);
       toast.success("Account created successfully!");
+      nav("/");
       console.log("✅ Registered:", res.data);
     } catch (error) {
       if (isAxiosError(error)) {
